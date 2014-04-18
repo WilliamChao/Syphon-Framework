@@ -58,6 +58,7 @@ extern NSString * const SyphonServerOptionIsPrivate;
 extern NSString * const SyphonServerOptionAntialiasSampleCount;
 extern NSString * const SyphonServerOptionDepthBufferResolution;
 extern NSString * const SyphonServerOptionStencilBufferResolution;
+extern NSString * const SyphonServerOptionUseSRGBBuffer;
 
 NSString *SyphonCreateUUIDString(void) NS_RETURNS_RETAINED;
 

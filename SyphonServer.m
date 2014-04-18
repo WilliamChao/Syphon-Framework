@@ -182,6 +182,9 @@ static void finalizer()
             _wantsContextChanges = YES;
         }
 
+        NSNumber *enableSRGB = [options objectForKey:SyphonServerOptionUseSRGBBuffer];
+        _useSRGBBuffer = ([enableSRGB respondsToSelector:@selector(boolValue)] && [enableSRGB boolValue] == YES);
+
         // Prevent this app from being suspended or terminated eg if it goes off-screen (MacOS 10.9+ only)
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
         if ([processInfo respondsToSelector:@selector(beginActivityWithOptions:reason:)])
@@ -352,6 +355,12 @@ static void finalizer()
 	{		
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _surfaceFBO);
 	}
+
+	if(_useSRGBBuffer)
+	{
+		// Enable linear to sRGB correction.
+		glEnable(GL_FRAMEBUFFER_SRGB);
+	}
 #endif // SYPHON_DEBUG_NO_DRAWING
 	return YES;
 }
@@ -375,6 +384,12 @@ static void finalizer()
 	// flush to make sure IOSurface updates are seen globally.
 	glFlushRenderAPPLE();
 		
+	if(_useSRGBBuffer)
+	{
+		// Disable linear to sRGB correction.
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
+
 	// restore state
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _previousFBO);	
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, _previousReadFBO);
@@ -645,7 +660,8 @@ static void finalizer()
     
     // make a new texture.
     
-	_surfaceTexture = [[SyphonIOSurfaceImage alloc] initWithSurface:_surfaceRef forContext:cgl_ctx];
+	GLenum internalFormat = _useSRGBBuffer ? GL_SRGB8_ALPHA8_EXT : GL_RGBA8;
+	_surfaceTexture = [[SyphonIOSurfaceImage alloc] initWithSurface:_surfaceRef forContext:cgl_ctx internalFormat:internalFormat];
 	if(_surfaceTexture == nil)
 	{
 		[self destroyIOSurface];

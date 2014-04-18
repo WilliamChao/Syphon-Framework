@@ -41,6 +41,7 @@
 	NSSize _size;
 }
 - (id)initWithSurface:(IOSurfaceRef)surfaceRef forContext:(CGLContextObj)context;
+- (id)initWithSurface:(IOSurfaceRef)surfaceRef forContext:(CGLContextObj)context internalFormat:(GLenum)internalFormat;
 @end
 
 #if defined(SYPHON_USE_CLASS_ALIAS)
