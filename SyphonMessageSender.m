@@ -85,6 +85,8 @@
 
 - (void)send:(id <NSCoding>)payload ofType:(uint32_t)type
 {
+	SYPHON_UNUSED(payload);
+	SYPHON_UNUSED(type);
 	// subclasses override this
 }
 

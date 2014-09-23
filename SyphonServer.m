@@ -868,6 +868,7 @@ static NSMutableSet *mRetireList = nil;
 
 - (void) handleDiscoveryRequest:(NSNotification*) aNotification
 {
+	SYPHON_UNUSED(aNotification);
 	SYPHONLOG(@"Got Discovery Request");
 	
 	[self broadcastServerAnnounce];

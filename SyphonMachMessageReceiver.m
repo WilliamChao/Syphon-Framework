@@ -67,6 +67,8 @@
 
 - (void)handleMachMessage:(void *)msg
 {
+	SYPHON_UNUSED(msg);
+
 	// TODO: handle data in messages
 	[self receiveMessageWithPayload:nil ofType:0];
 }

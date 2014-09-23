@@ -73,6 +73,8 @@ typedef struct {
 
 - (void)send:(id <NSCoding>)data ofType:(uint32_t)type
 {
+	SYPHON_UNUSED(data);
+
 	// TODO: handle sending data in messages, this just sends an integer, which isn't particularly handy...
 	SyphonMachMessage message;
 	mach_msg_header_t *header = &(message.header);

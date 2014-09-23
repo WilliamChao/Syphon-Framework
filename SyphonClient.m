@@ -53,6 +53,8 @@
 
 - (id)initWithServerDescription:(NSDictionary *)description options:(NSDictionary *)options newFrameHandler:(void (^)(SyphonClient *client))handler
 {
+	SYPHON_UNUSED(options);
+
     self = [super init];
 	if (self)
 	{

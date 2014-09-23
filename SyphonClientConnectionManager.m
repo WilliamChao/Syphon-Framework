@@ -59,6 +59,8 @@ static void SyphonClientPrivateInsertInstance(id instance, NSString *uuid)
 
 static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 {
+	SYPHON_UNUSED(instance);
+
 	OSSpinLockLock(&_lookupTableLock);
 	if (uuid) [_lookupTable removeObjectForKey:uuid];
 	if ([_lookupTable count] == 0)
@@ -197,6 +199,8 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 
 - (void)addInfoClient:(id)client
 {
+	SYPHON_UNUSED(client);
+
 	OSSpinLockLock(&_lock);
 	_infoClientCount++;
 	BOOL shouldSendAdd = NO;
@@ -251,6 +255,8 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 
 - (void)removeInfoClient:(id)client
 {
+	SYPHON_UNUSED(client);
+
 	OSSpinLockLock(&_lock);
 	_infoClientCount--;
 	if (_infoClientCount == 0)
