@@ -414,6 +414,17 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 	return result;
 }
 
+- (IOSurfaceRef)IOSurface
+{
+    IOSurfaceRef result = NULL;
+    OSSpinLockLock(&_lock);
+    IOSurfaceRef surf = [self surfaceHavingLock];
+    if (surf)
+        result = (IOSurfaceRef)CFRetain(surf);
+    OSSpinLockUnlock(&_lock);
+    return result;
+}
+
 - (NSUInteger)frameID
 {
 	NSUInteger result;

@@ -152,6 +152,16 @@
 	return frame;
 }
 
+- (IOSurfaceRef)IOSurface
+{
+    IOSurfaceRef res;
+	OSSpinLockLock(&_lock);
+	_lastFrameID = [(SyphonClientConnectionManager *)_connectionManager frameID];
+	res = [(SyphonClientConnectionManager *)_connectionManager IOSurface];
+	OSSpinLockUnlock(&_lock);
+	return res;
+}
+
 - (NSDictionary *)serverDescription
 {
 	OSSpinLockLock(&_lock);

@@ -90,6 +90,7 @@
  */
 - (SYPHON_IMAGE_UNIQUE_CLASS_NAME *)newFrameImageForContext:(CGLContextObj)cgl_ctx;
 
+- (IOSurfaceRef)IOSurface;
 /*!
  Stops the client from receiving any further frames from the server. In garbage-collected applications you must call this method prior to removing strong references to the client. In non-garbage-collected applications, use of this method is optional and releasing all references to the client has the same effect.
 
