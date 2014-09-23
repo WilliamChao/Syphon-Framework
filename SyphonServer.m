@@ -563,7 +563,7 @@ static void finalizer()
                 GLint maxSamples;
                 glGetIntegerv(GL_MAX_SAMPLES_EXT, &maxSamples);
                 
-                if (newMSAASampleCount > maxSamples) newMSAASampleCount = maxSamples;
+                if (newMSAASampleCount > (GLuint)maxSamples) newMSAASampleCount = maxSamples;
             }
         }
         if (newMSAASampleCount != _msaaSampleCount)
