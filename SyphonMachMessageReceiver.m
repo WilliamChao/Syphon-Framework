@@ -33,7 +33,7 @@
 #include <mach/mach.h>
 
 @implementation SyphonMachMessageReceiver
-- (id)initForName:(NSString *)name protocol:(NSString *)protocolName handler:(void (^)(id <NSCoding> data, uint32_t type))handler
+- (id)initForName:(NSString *)name protocol:(NSString *)protocolName handler:(void (^)(id data, uint32_t type))handler
 {
     self = [super initForName:name protocol:protocolName handler:handler];
 	if (self)
@@ -67,6 +67,8 @@
 
 - (void)handleMachMessage:(void *)msg
 {
+	SYPHON_UNUSED(msg);
+
 	// TODO: handle data in messages
 	[self receiveMessageWithPayload:nil ofType:0];
 }

@@ -37,7 +37,7 @@
 @end
 
 @implementation SyphonCFMessageSender
-- (id)initForName:(NSString *)name protocol:(NSString *)protocolName invalidationHandler:(void (^)(void))handler;
+- (id)initForName:(NSString *)name protocol:(NSString *)protocolName invalidationHandler:(void (^)(void))handler
 {
     self = [super initForName:name protocol:protocolName invalidationHandler:handler];
 	if (self)

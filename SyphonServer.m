@@ -578,7 +578,7 @@ static void finalizer()
                 GLint maxSamples;
                 glGetIntegerv(GL_MAX_SAMPLES_EXT, &maxSamples);
                 
-                if (newMSAASampleCount > maxSamples) newMSAASampleCount = maxSamples;
+                if (newMSAASampleCount > (GLuint)maxSamples) newMSAASampleCount = maxSamples;
             }
         }
         if (newMSAASampleCount != _msaaSampleCount)
@@ -884,6 +884,7 @@ static NSMutableSet *mRetireList = nil;
 
 - (void) handleDiscoveryRequest:(NSNotification*) aNotification
 {
+	SYPHON_UNUSED(aNotification);
 	SYPHONLOG(@"Got Discovery Request");
 	
 	[self broadcastServerAnnounce];

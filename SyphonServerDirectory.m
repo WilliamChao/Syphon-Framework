@@ -88,11 +88,15 @@ NSString * const SyphonServerRetireNotification = @"SyphonServerRetireNotificati
 
 + (id)allocWithZone:(NSZone *)zone
 {
+	SYPHON_UNUSED(zone);
+
 	return [[self sharedDirectory] retain];
 }
 
 - (id)copyWithZone:(NSZone *)zone
 {
+	SYPHON_UNUSED(zone);
+
     return self;
 }
 
@@ -178,6 +182,9 @@ NSString * const SyphonServerRetireNotification = @"SyphonServerRetireNotificati
 	}
 	pthread_mutex_lock(&_generalLock);
 	NSIndexSet *indexes = [_servers indexesOfObjectsPassingTest:^(id obj, NSUInteger idx, BOOL *stop) {
+		SYPHON_UNUSED(idx);
+		SYPHON_UNUSED(stop);
+
 		if ((name == nil || [[obj objectForKey:SyphonServerDescriptionNameKey] isEqualToString:name])
 			&& (appname == nil || [[obj objectForKey:SyphonServerDescriptionAppNameKey] isEqualToString:appname]))
 		{
@@ -200,6 +207,8 @@ NSString * const SyphonServerRetireNotification = @"SyphonServerRetireNotificati
 
 - (void)handleAccounceRequest:(NSNotification *)aNotification
 {
+	SYPHON_UNUSED(aNotification);
+
 	/*
 	 We watch for a global announce request to check the servers we know about are still alive.
 	 This could have come from any application.
@@ -221,6 +230,9 @@ NSString * const SyphonServerRetireNotification = @"SyphonServerRetireNotificati
 			pthread_mutex_lock(&_generalLock);
 			// Get the servers we know about which haven't responded to our announce request
 			NSIndexSet *indices = [_servers indexesOfObjectsPassingTest:^(id obj, NSUInteger idx, BOOL *stop) {
+				SYPHON_UNUSED(idx);
+				SYPHON_UNUSED(stop);
+
 				if ([_pings containsObject:[obj objectForKey:SyphonServerDescriptionUUIDKey]])
 				{
 					return NO;
@@ -403,6 +415,9 @@ NSString * const SyphonServerRetireNotification = @"SyphonServerRetireNotificati
 	else
 	{
 		return [self indexOfObjectPassingTest:^(id obj, NSUInteger idx, BOOL *stop) {
+			SYPHON_UNUSED(idx);
+			SYPHON_UNUSED(stop);
+
 			if ([[obj objectForKey:SyphonServerDescriptionUUIDKey] isEqualToString:uuid])
 			{
 				return YES;

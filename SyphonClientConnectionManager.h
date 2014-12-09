@@ -83,6 +83,7 @@
 - (void)removeFrameClient:(id <SyphonFrameReceiving>)client;	// paired
 @property (readonly) NSDictionary *serverDescription;
 - (SyphonImage *)newFrameForContext:(CGLContextObj)context;
+- (IOSurfaceRef)IOSurface;
 @property (readonly) NSUInteger frameID;
 @end
 

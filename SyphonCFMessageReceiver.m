@@ -38,6 +38,8 @@ static CFDataRef MessageReturnCallback (
 								 void *info
 								 )
 {
+	SYPHON_UNUSED(local);
+
 	id <NSCoding> decoded;
 	if (data && CFDataGetLength(data))
 	{
