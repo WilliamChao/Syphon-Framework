@@ -185,6 +185,9 @@ static void finalizer()
         NSNumber *enableSRGB = [options objectForKey:SyphonServerOptionUseSRGBBuffer];
         _useSRGBBuffer = ([enableSRGB respondsToSelector:@selector(boolValue)] && [enableSRGB boolValue] == YES);
 
+        NSNumber *discardAlpha = [options objectForKey:SyphonServerOptionDiscardAlphaChannel];
+        _discardAlphaChannel = ([discardAlpha respondsToSelector:@selector(boolValue)] && [discardAlpha boolValue] == YES);
+
         // Prevent this app from being suspended or terminated eg if it goes off-screen (MacOS 10.9+ only)
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
         if ([processInfo respondsToSelector:@selector(beginActivityWithOptions:reason:)])
@@ -449,8 +452,24 @@ static void finalizer()
 		// do a nearest interp.
 //		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 //		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glColor4f(1.0, 1.0, 1.0, 1.0);
+
+		// set up texture combiner.
+		if(_discardAlphaChannel)
+		{
+			// (r, g, b, 1)
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+			glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+			glTexEnvf(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+			glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+			glTexEnvf(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+			const float texEnvColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+			glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, texEnvColor);
+		}
+		else
+		{
+			// (r, g, b, a)
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		}
 		
 		// why do we need it ?
 		glDisable(GL_BLEND);
