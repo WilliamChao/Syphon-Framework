@@ -34,7 +34,7 @@
 
 #import <libkern/OSAtomic.h>
 
-#import <OpenGL/CGLMacro.h>
+//#import <OpenGL/CGLMacro.h>
 
 @implementation SyphonClient
 #if SYPHON_DEBUG_NO_DRAWING

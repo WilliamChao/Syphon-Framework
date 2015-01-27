@@ -32,6 +32,9 @@
 // For IOSurface
 #import <IOSurface/IOSurface.h>
 #import <OpenGL/CGLIOSurface.h>
+//@eromanc: For CoreProfile Checking
+#import "SyphonOpenGLFunctions.h"
+
 
 @implementation SyphonIOSurfaceImage
 - (id)initWithSurface:(IOSurfaceRef)surfaceRef forContext:(CGLContextObj)context
@@ -44,22 +47,30 @@
 			[self release];
 			return nil;
 		}
+        
+        GLboolean isCoreProfile = SyphonOpenGLContextIsCoreProfile(context);
+        
 		_surface = (IOSurfaceRef)CFRetain(surfaceRef);
 		cgl_ctx = CGLRetainContext(context);
 		_size.width = IOSurfaceGetWidth(surfaceRef);
 		_size.height = IOSurfaceGetHeight(surfaceRef);
 
-		glPushAttrib(GL_TEXTURE_BIT);
-		
+        if (!isCoreProfile) {//@eromanc: I think this call is not needed at all, because it seems like it just remembers the currently 2D bound texture, but I'm not completely sure.
+            glPushAttrib(GL_TEXTURE_BIT);
+        }
 		// create the surface backed texture
 		glGenTextures(1, &_texture);
-		glEnable(GL_TEXTURE_RECTANGLE_ARB);
+        if(!isCoreProfile){
+            glEnable(GL_TEXTURE_RECTANGLE_ARB);
+        }
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, _texture);
-		
+
 		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA8, _size.width, _size.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, _surface, 0);
 		
-		glPopAttrib();
-		
+        if(!isCoreProfile){
+            glPopAttrib();
+        }
+
 		if(err != kCGLNoError)
 		{
 			SYPHONLOG(@"Error creating IOSurface texture: %s & %x", CGLErrorString(err), glGetError());
