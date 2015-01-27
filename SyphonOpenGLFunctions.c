@@ -65,3 +65,13 @@ GLboolean SyphonOpenGLContextSupportsExtension(CGLContextObj cgl_ctx, const char
 	return GL_FALSE;
 }
 
+GLboolean SyphonOpenGLContextIsCoreProfile(CGLContextObj context){
+    CGLPixelFormatObj pixelFormat = CGLGetPixelFormat(context);
+    GLint coreProfileInteger = -1;
+    CGLDescribePixelFormat(pixelFormat, 0,  kCGLPFAOpenGLProfile , &coreProfileInteger);
+    if(kCGLOGLPVersion_Legacy == coreProfileInteger){
+        return GL_FALSE;
+    }
+    return GL_TRUE;
+}
+

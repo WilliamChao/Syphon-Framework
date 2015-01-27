@@ -31,3 +31,4 @@
 #import <OpenGL/OpenGL.h>
 
 GLboolean SyphonOpenGLContextSupportsExtension(CGLContextObj cgl_ctx, const char *extension);
+GLboolean SyphonOpenGLContextIsCoreProfile(CGLContextObj context);
