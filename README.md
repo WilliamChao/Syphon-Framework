@@ -1,3 +1,5 @@
+This is a very simple repo, with some minor modifications to provide compatible code with both Legacy and Core Profile OpenGL
+
 Syphon is an open source Mac OS X technology that allows applications to share video and still images with one another in realtime. 
 
 See http://syphon.v002.info for more information.
