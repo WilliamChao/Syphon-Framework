@@ -37,14 +37,18 @@ NSString *const fragmentShaderString = SHADER_STRING
 (
 
  uniform sampler2DRect u_color;
+ uniform vec4 u_region;
+ uniform vec2 u_tex_size;
+ uniform int u_flip;
  layout(origin_upper_left) in vec4 gl_FragCoord;
  
  out vec4 o_frag_color;
  
- void main(void)
-{
-    vec2 v_texcoord = vec2(gl_FragCoord.s, gl_FragCoord.t);
+ void main(void){
+    float y = mix(gl_FragCoord.t+u_region.y,
+                  (u_tex_size.y-gl_FragCoord.t-(u_tex_size.y-u_region.w))+u_region.y, u_flip);
 
+    vec2 v_texcoord = vec2(gl_FragCoord.s+u_region.x, y);
     o_frag_color = texture(u_color, v_texcoord);
 }
 );
@@ -53,6 +57,12 @@ NSString *const fragmentShaderString = SHADER_STRING
     GLint vertexShaderHandle;
     GLint fragmentShaderHandle;
     GLint handle;
+    
+    GLuint u_color_location;
+    GLuint u_region_location;
+    GLuint u_flip_location;
+    GLuint u_tex_size_location;
+
 }
 
 -(GLint)program{
@@ -120,17 +130,33 @@ NSString *const fragmentShaderString = SHADER_STRING
         }
         glBindFragDataLocation(handle, 0, "o_frag_color");
 
-        //[command setTexture:_texture target:GL_TEXTURE_RECTANGLE unit:GL_TEXTURE0];
-        //[command setUniform:[GLValue valueWithInt:0] forName:@"u_color"];
+        
+        u_color_location = glGetUniformLocation(handle, "u_color");
+        u_region_location = glGetUniformLocation(handle, "u_region");
+        u_tex_size_location = glGetUniformLocation(handle, "u_tex_size");
+        u_flip_location = glGetUniformLocation(handle, "u_flip");
+
 
     }
     return self;
 }
 
+
+-(void)setRegion:(NSRect)region size:(NSSize)size flipped:(BOOL)isFlipped{
+    glUniform1i(u_color_location, 0);
+    glUniform4f(u_region_location, region.origin.x, region.origin.y,region.size.height, region.size.height);
+    glUniform2f(u_tex_size_location, size.width, size.height);
+    glUniform1i(u_flip_location, isFlipped);
+}
+
+
 - (void)use{
     glUseProgram(handle);
 }
 
++(void)unUse{
+    glUseProgram(0);
+}
 
 
 @end

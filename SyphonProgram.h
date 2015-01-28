@@ -10,4 +10,8 @@
 
 @interface SyphonProgram : NSObject
 @property(readonly) GLint program;
+-(void)use;
+-(void)setRegion:(NSRect)region size:(NSSize)size flipped:(BOOL)isFlipped;
++(void)unUse;
+
 @end

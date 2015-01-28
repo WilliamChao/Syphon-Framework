@@ -14,7 +14,7 @@
 
 
 @implementation SyphonServerDrawingCoreProfile{
-    SyphonProgram*program;
+    SyphonProgram*syphonProgram;
 }
 
 
@@ -22,26 +22,20 @@
     
     CGLSetCurrentContext(cgl_ctx);
     
-    if(nil==program){
-        program = [[SyphonProgram alloc] init];
+    if(nil==syphonProgram){
+        syphonProgram = [[SyphonProgram alloc] init];
     }
     
-    if(nil == program){
+    if(nil == syphonProgram){
         return;
     }
     
-    glViewport(0, 0, size.width, size.height);
-    glUseProgram(program.program);
-    GLint uniformLoacation = glGetUniformLocation(program.program, "u_color");
-
-    glUniform1i(uniformLoacation, 0);
-
-    //glUniform1iv(location, mCount, self.intValues);
     
+    glViewport(0, 0, surfaceSize.width, surfaceSize.height);
+    [syphonProgram use];
+    [syphonProgram setRegion:region size:size flipped:isFlipped];
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(target, texID);
-    
-    
+    glBindTexture(target, texID);    
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glUseProgram(0);
 }
