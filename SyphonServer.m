@@ -39,6 +39,11 @@
 
 #import <libkern/OSAtomic.h>
 
+#import "SyphonServerDrawingLegacy.h"
+#import "SyphonServerDrawingCoreProfile.h"
+
+
+
 @interface SyphonServer (Private)
 + (void)addServerToRetireList:(NSString *)serverUUID;
 + (void)removeServerFromRetireList:(NSString *)serverUUID;
@@ -55,6 +60,8 @@
 - (void)stopBroadcasts;
 - (void)broadcastServerAnnounce;
 - (void)broadcastServerUpdate;
+
+
 @end
 
 __attribute__((destructor))
@@ -63,7 +70,9 @@ static void finalizer()
 	[SyphonServer retireRemainingServers];
 }
 
-@implementation SyphonServer
+@implementation SyphonServer{
+    id<SyphonServerDrawingProtocol> _drawingProtocol; //helper
+}
 
 + (BOOL)automaticallyNotifiesObserversForKey:(NSString *)theKey
 {
@@ -110,7 +119,14 @@ static void finalizer()
 		_mdLock = OS_SPINLOCK_INIT;
 		
 		cgl_ctx = CGLRetainContext(context);
-		
+        GLboolean isCoreProfile = SyphonOpenGLContextIsCoreProfile(context);
+        if(isCoreProfile){
+            _drawingProtocol = [[SyphonServerDrawingCoreProfile alloc] init];
+        }
+        else{
+            _drawingProtocol = [[SyphonServerDrawingLegacy alloc] init];
+        }
+        
 		if (serverName == nil)
 		{
 			serverName = @"";
@@ -327,22 +343,19 @@ static void finalizer()
 #if !SYPHON_DEBUG_NO_DRAWING
     // If we have changed screens, we need to check we can still use any extensions we rely on
 	// If the dimensions of the image have changed, rebuild the IOSurface/FBO/Texture combo.
-	if((_wantsContextChanges && [self capabilitiesDidChange]) || ! NSEqualSizes(_surfaceTexture.textureSize, size)) 
+	if((_wantsContextChanges && [self capabilitiesDidChange]) || ! NSEqualSizes(_surfaceTexture.textureSize, size))
 	{
 		[self destroyIOSurface];
 		[self setupIOSurfaceForSize:size];
-		_pushPending = YES;
-	}
-	
+        _pushPending = YES;
+    }
     if (_surfaceTexture == nil)
     {
         return NO;
     }
-    
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &_previousFBO);
 	glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &_previousReadFBO);
 	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &_previousDrawFBO);
-	
 	
 	if(_msaaSampleCount)
 	{
@@ -401,134 +414,8 @@ static void finalizer()
 	{
 #if !SYPHON_DEBUG_NO_DRAWING
 		// render to our FBO with an IOSurface backed texture attachment (whew!)
-		
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
-		glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-		// Setup OpenGL states
-		NSSize surfaceSize = _surfaceTexture.textureSize;
-		glViewport(0, 0, surfaceSize.width,  surfaceSize.height);
-		
-        // We need to ensure we set this before changing our texture matrix
-        glActiveTexture(GL_TEXTURE0);
-        // ensure we act on the proper client texture as well
-        glClientActiveTexture(GL_TEXTURE0);
-        
-		glMatrixMode(GL_TEXTURE);
-		glPushMatrix();
-		glLoadIdentity();
-		
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, surfaceSize.width, 0, surfaceSize.height, -1, 1);
-		
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-				
-		// dont bother clearing. we dont have any alpha so we just write over the buffer contents. saves us a write.
-		// via GL_REPLACE TEX_ENV
-		glEnable(target);
-		glBindTexture(target, texID);
-		
-		// do a nearest interp.
-//		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glColor4f(1.0, 1.0, 1.0, 1.0);
-		
-		// why do we need it ?
-		glDisable(GL_BLEND);
-		
-		GLfloat tex_coords[8];
-		
-		if(target == GL_TEXTURE_2D)
-		{
-            // Cannot assume mip-mapping and repeat modes are ok & will work, so we:
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);	// Linear Filtering
-            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);	// Linear Filtering
-                        
-			GLfloat texOriginX = region.origin.x / size.width;
-			GLfloat texOriginY = region.origin.y / size.height;
-			GLfloat texExtentX = (region.size.width + region.origin.x) / size.width;
-			GLfloat texExtentY = (region.size.height + region.origin.y) / size.height;
-			
-			if(!isFlipped)
-			{
-				// X							// Y
-				tex_coords[0] = texOriginX;		tex_coords[1] = texOriginY;
-				tex_coords[2] = texOriginX;		tex_coords[3] = texExtentY;
-				tex_coords[4] = texExtentX;		tex_coords[5] = texExtentY;
-				tex_coords[6] = texExtentX;		tex_coords[7] = texOriginY;
-			}
-			else 
-			{
-				tex_coords[0] = texOriginX;		tex_coords[1] = texExtentY;
-				tex_coords[2] = texOriginX;		tex_coords[3] = texOriginY;
-				tex_coords[4] = texExtentX;		tex_coords[5] = texOriginY;
-				tex_coords[6] = texExtentX;		tex_coords[7] = texExtentY;
-			}
-		}
-		else
-		{
-			if(!isFlipped)
-			{	// X													// Y
-				tex_coords[0] = region.origin.x;						tex_coords[1] = 0.0;
-				tex_coords[2] = region.origin.x;						tex_coords[3] = region.size.height + region.origin.y;
-				tex_coords[4] = region.size.width + region.origin.x;	tex_coords[5] = region.size.height + region.origin.y;
-				tex_coords[6] = region.size.width + region.origin.x;	tex_coords[7] = 0.0;
-			}
-			else 
-			{
-				tex_coords[0] = region.origin.x;						tex_coords[1] = region.size.height + region.origin.y;
-				tex_coords[2] = region.origin.x;						tex_coords[3] = region.origin.y;
-				tex_coords[4] = surfaceSize.width;						tex_coords[5] = region.origin.y;
-				tex_coords[6] = surfaceSize.width;						tex_coords[7] = region.size.height + region.origin.y;
-			}
-		}
-		
-		GLfloat verts[] = 
-		{
-			0.0f, 0.0f,
-			0.0f, surfaceSize.height,
-			surfaceSize.width, surfaceSize.height,
-			surfaceSize.width, 0.0f,
-		};
-        
-        // Ought to cache the GL_ARRAY_BUFFER_BINDING, GL_ELEMENT_ARRAY_BUFFER_BINDING, set buffer to 0, and reset
-        GLint arrayBuffer, elementArrayBuffer;
-        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementArrayBuffer);
-        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &arrayBuffer);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-		glTexCoordPointer(2, GL_FLOAT, 0, tex_coords );
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(2, GL_FLOAT, 0, verts );
-		glDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
-		
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementArrayBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer);
-        
-		glBindTexture(target, 0);
-		
-		// Restore OpenGL states
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-	
-
-		glMatrixMode(GL_TEXTURE);
-		glPopMatrix();
-		
-		glPopClientAttrib();
-		glPopAttrib();
+        NSSize surfaceSize = _surfaceTexture.textureSize;
+        [_drawingProtocol drawFrameTexture:texID textureTarget:target imageRegion:region textureDimensions:size surfaceSize:surfaceSize flipped:isFlipped inContex:cgl_ctx];
 #endif // SYPHON_DEBUG_NO_DRAWING
 		[self unbindAndPublish];
 	}
@@ -624,25 +511,23 @@ static void finalizer()
 #endif // SYPHON_DEBUG_NO_DRAWING
 
 - (void) setupIOSurfaceForSize:(NSSize)size
-{	
+{
 #if !SYPHON_DEBUG_NO_DRAWING
 	// init our texture and IOSurface
 	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)size.width], (NSString*)kIOSurfaceWidth,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)size.height], (NSString*)kIOSurfaceHeight,
 									   [NSNumber numberWithUnsignedInteger:4U], (NSString*)kIOSurfaceBytesPerElement, nil];
-	
+
 	_surfaceRef =  IOSurfaceCreate((CFDictionaryRef) surfaceAttributes);
 	[surfaceAttributes release];
-		
 	// save state
     GLint previousRBO;
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	//glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &_previousFBO);
 	glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &_previousReadFBO);
 	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &_previousDrawFBO);
 	glGetIntegerv(GL_RENDERBUFFER_BINDING_EXT, &previousRBO);
-    
     // make a new texture.
     
 	_surfaceTexture = [[SyphonIOSurfaceImage alloc] initWithSurface:_surfaceRef forContext:cgl_ctx];
@@ -665,7 +550,6 @@ static void finalizer()
             {
                 _depthBuffer = [self newRenderbufferForSize:size internalFormat:_depthBufferResolution];
             }
-            
             if (_stencilBufferResolution != 0)
             {
                 _stencilBuffer = [self newRenderbufferForSize:size internalFormat:_stencilBufferResolution];
@@ -673,7 +557,7 @@ static void finalizer()
         }
         
 		if(_msaaSampleCount > 0)
-		{            
+		{
 			// Color MSAA Attachment
             _msaaColorBuffer = [self newRenderbufferForSize:size internalFormat:GL_RGBA];
             
@@ -701,13 +585,11 @@ static void finalizer()
 			if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
 			{
 				SYPHONLOG(@"SyphonServer: Cannot create MSAA FBO (OpenGL Error %04X), falling back to non-antialiased FBO", status);
-                
                 glDeleteFramebuffersEXT(1, &_msaaFBO);
                 _msaaFBO = 0;
                 
                 glDeleteRenderbuffersEXT(1, &_msaaColorBuffer);
                 _msaaColorBuffer = 0;
-                
 				_msaaSampleCount = 0;
 			}			
 		}
@@ -743,13 +625,13 @@ static void finalizer()
 			[self destroyIOSurface];
 		}
 	}
-	
+
 	// restore state
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, previousRBO);
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _previousFBO);	
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, _previousReadFBO);
 	glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, _previousDrawFBO);
-	glPopAttrib();
+	//glPopAttrib();
 	
 #endif // SYPHON_DEBUG_NO_DRAWING
 }
