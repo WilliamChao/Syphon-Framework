@@ -31,6 +31,7 @@
     }
     
     
+    glDisable(GL_CULL_FACE);
     glViewport(0, 0, surfaceSize.width, surfaceSize.height);
     [syphonProgram use];
     [syphonProgram setRegion:region size:size flipped:isFlipped];

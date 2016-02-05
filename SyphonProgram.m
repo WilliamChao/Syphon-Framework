@@ -16,18 +16,16 @@
 
 NSString *const vertexShaderString = SHADER_STRING
 (
-out vec3 v_texcoord;
+out vec2 v_texcoord;
 
 void main(void)
 {
     int id = gl_VertexID;
     
-    v_texcoord = vec3((id == 2) ?  2.0 :  0.0,
-                      (id == 1) ?  2.0 :  0.0,
-                      1.0);
-  
+    v_texcoord = vec2((id == 2) ?  2.0 :  0.0,
+                      (id == 1) ?  2.0 :  0.0);
 
-    gl_Position = vec4(v_texcoord.xy * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 1.0, 1.0);
+    gl_Position = vec4(v_texcoord * vec2(2.0, -2.0) + vec2(-1.0, 1.0), 1.0, 1.0);
 }
 );
 
@@ -36,20 +34,18 @@ void main(void)
 NSString *const fragmentShaderString = SHADER_STRING
 (
 
- uniform sampler2DRect u_color;
+ uniform sampler2D u_color;
  uniform vec4 u_region;
  uniform vec2 u_tex_size;
  uniform int u_flip;
- layout(origin_upper_left) in vec4 gl_FragCoord;
  
+ in vec2 v_texcoord;
+
  out vec4 o_frag_color;
  
  void main(void){
-    float y = mix(gl_FragCoord.t+u_region.y,
-                  (u_tex_size.y-gl_FragCoord.t-(u_tex_size.y-u_region.w))+u_region.y, u_flip);
-
-    vec2 v_texcoord = vec2(gl_FragCoord.s+u_region.x, y);
-    o_frag_color = texture(u_color, v_texcoord);
+    vec2 uv = vec2(v_texcoord.x, 1.0 - v_texcoord.y);
+    o_frag_color = texture(u_color, uv);
 }
 );
 
