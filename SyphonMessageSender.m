@@ -33,7 +33,7 @@
 //#import "SyphonMachMessageSender.h"
 
 @implementation SyphonMessageSender
-- (id)initForName:(NSString *)name protocol:(NSString *)protocolName invalidationHandler:(void (^)(void))handler;
+- (id)initForName:(NSString *)name protocol:(NSString *)protocolName invalidationHandler:(void (^)(void))handler
 {
     self = [super init];
 	if (self)
@@ -85,6 +85,8 @@
 
 - (void)send:(id <NSCoding>)payload ofType:(uint32_t)type
 {
+	SYPHON_UNUSED(payload);
+	SYPHON_UNUSED(type);
 	// subclasses override this
 }
 

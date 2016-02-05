@@ -53,6 +53,8 @@
 
 - (id)initWithServerDescription:(NSDictionary *)description options:(NSDictionary *)options newFrameHandler:(void (^)(SyphonClient *client))handler
 {
+	SYPHON_UNUSED(options);
+
     self = [super init];
 	if (self)
 	{
@@ -150,6 +152,16 @@
 	SyphonImage *frame = [(SyphonClientConnectionManager *)_connectionManager newFrameForContext:cgl_ctx];
 	OSSpinLockUnlock(&_lock);
 	return frame;
+}
+
+- (IOSurfaceRef)IOSurface
+{
+    IOSurfaceRef res;
+	OSSpinLockLock(&_lock);
+	_lastFrameID = [(SyphonClientConnectionManager *)_connectionManager frameID];
+	res = [(SyphonClientConnectionManager *)_connectionManager IOSurface];
+	OSSpinLockUnlock(&_lock);
+	return res;
 }
 
 - (NSDictionary *)serverDescription

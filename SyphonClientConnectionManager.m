@@ -51,7 +51,7 @@ static void SyphonClientPrivateInsertInstance(id instance, NSString *uuid)
 	OSSpinLockLock(&_lookupTableLock);
 	if (uuid)
 	{
-		if (!_lookupTable) _lookupTable = [[NSMapTable alloc] initWithKeyOptions:NSMapTableStrongMemory valueOptions:NSMapTableZeroingWeakMemory capacity:1];
+		if (!_lookupTable) _lookupTable = [[NSMapTable strongToWeakObjectsMapTable] retain];
 		[_lookupTable setObject:instance forKey:uuid];
 	}
 	OSSpinLockUnlock(&_lookupTableLock);
@@ -59,6 +59,8 @@ static void SyphonClientPrivateInsertInstance(id instance, NSString *uuid)
 
 static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 {
+	SYPHON_UNUSED(instance);
+
 	OSSpinLockLock(&_lookupTableLock);
 	if (uuid) [_lookupTable removeObjectForKey:uuid];
 	if ([_lookupTable count] == 0)
@@ -197,6 +199,8 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 
 - (void)addInfoClient:(id)client
 {
+	SYPHON_UNUSED(client);
+
 	OSSpinLockLock(&_lock);
 	_infoClientCount++;
 	BOOL shouldSendAdd = NO;
@@ -251,6 +255,8 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 
 - (void)removeInfoClient:(id)client
 {
+	SYPHON_UNUSED(client);
+
 	OSSpinLockLock(&_lock);
 	_infoClientCount--;
 	if (_infoClientCount == 0)
@@ -277,7 +283,7 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 	if (_frameQueue == nil)
 	{
 		_frameQueue = dispatch_queue_create([_myUUID cStringUsingEncoding:NSUTF8StringEncoding], 0);
-		_frameClients = [[NSHashTable hashTableWithWeakObjects] retain];
+		_frameClients = [[NSHashTable weakObjectsHashTable] retain];
 	}
 	OSSpinLockUnlock(&_lock);
 	// only access _frameClients within the queue
@@ -412,6 +418,17 @@ static void SyphonClientPrivateRemoveInstance(id instance, NSString *uuid)
 	}
 	OSSpinLockUnlock(&_lock);
 	return result;
+}
+
+- (IOSurfaceRef)IOSurface
+{
+    IOSurfaceRef result = NULL;
+    OSSpinLockLock(&_lock);
+    IOSurfaceRef surf = [self surfaceHavingLock];
+    if (surf)
+        result = (IOSurfaceRef)CFRetain(surf);
+    OSSpinLockUnlock(&_lock);
+    return result;
 }
 
 - (NSUInteger)frameID

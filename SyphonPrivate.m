@@ -43,6 +43,8 @@ NSString * const SyphonServerOptionIsPrivate = @"SyphonServerOptionIsPrivate";
 NSString * const SyphonServerOptionAntialiasSampleCount = @"SyphonServerOptionAntialiasSampleCount";
 NSString * const SyphonServerOptionDepthBufferResolution = @"SyphonServerOptionDepthBufferResolution";
 NSString * const SyphonServerOptionStencilBufferResolution = @"SyphonServerOptionStencilBufferResolution";
+NSString * const SyphonServerOptionUseSRGBBuffer = @"SyphonServerOptionUseSRGBBuffer";
+NSString * const SyphonServerOptionDiscardAlphaChannel = @"SyphonServerOptionDiscardAlphaChannel";
 
 NSString *SyphonCreateUUIDString(void)
 {

@@ -39,6 +39,11 @@
 @implementation SyphonIOSurfaceImage
 - (id)initWithSurface:(IOSurfaceRef)surfaceRef forContext:(CGLContextObj)context
 {
+    return [self initWithSurface:surfaceRef forContext:context internalFormat:GL_RGBA8];
+}
+
+- (id)initWithSurface:(IOSurfaceRef)surfaceRef forContext:(CGLContextObj)context internalFormat:(GLenum)internalFormat
+{
     self = [super init];
 	if (self)
 	{
@@ -64,8 +69,8 @@
             glEnable(GL_TEXTURE_RECTANGLE_ARB);
         }
 		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, _texture);
-
-		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA8, _size.width, _size.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, _surface, 0);
+		
+		CGLError err = CGLTexImageIOSurface2D(cgl_ctx, GL_TEXTURE_RECTANGLE_ARB, internalFormat, _size.width, _size.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, _surface, 0);
 		
         if(!isCoreProfile){
             glPopAttrib();

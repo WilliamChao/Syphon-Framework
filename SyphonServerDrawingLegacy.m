@@ -12,7 +12,7 @@
 
 @implementation SyphonServerDrawingLegacy
 
-- (void)drawFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size surfaceSize:(NSSize)surfaceSize flipped:(BOOL)isFlipped inContex:(CGLContextObj)cgl_ctx{
+- (void)drawFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size surfaceSize:(NSSize)surfaceSize flipped:(BOOL)isFlipped inContex:(CGLContextObj)cgl_ctx discardAlpha:(BOOL)discardAlpha{
 
     
     
@@ -44,11 +44,23 @@
     glEnable(target);
     glBindTexture(target, texID);
     
-    // do a nearest interp.
-    //		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glColor4f(1.0, 1.0, 1.0, 1.0);
+    // set up texture combiner.
+    if(discardAlpha)
+    {
+        // (r, g, b, 1)
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+        glTexEnvf(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+        glTexEnvf(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+        const float texEnvColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+        glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, texEnvColor);
+    }
+    else
+    {
+        // (r, g, b, a)
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    }
     
     // why do we need it ?
     glDisable(GL_BLEND);

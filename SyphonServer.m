@@ -198,6 +198,12 @@ static void finalizer()
             _wantsContextChanges = YES;
         }
 
+        NSNumber *enableSRGB = [options objectForKey:SyphonServerOptionUseSRGBBuffer];
+        _useSRGBBuffer = ([enableSRGB respondsToSelector:@selector(boolValue)] && [enableSRGB boolValue] == YES);
+
+        NSNumber *discardAlpha = [options objectForKey:SyphonServerOptionDiscardAlphaChannel];
+        _discardAlphaChannel = ([discardAlpha respondsToSelector:@selector(boolValue)] && [discardAlpha boolValue] == YES);
+
         // Prevent this app from being suspended or terminated eg if it goes off-screen (MacOS 10.9+ only)
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
         if ([processInfo respondsToSelector:@selector(beginActivityWithOptions:reason:)])
@@ -365,6 +371,12 @@ static void finalizer()
 	{		
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _surfaceFBO);
 	}
+
+	if(_useSRGBBuffer)
+	{
+		// Enable linear to sRGB correction.
+		glEnable(GL_FRAMEBUFFER_SRGB);
+	}
 #endif // SYPHON_DEBUG_NO_DRAWING
 	return YES;
 }
@@ -388,6 +400,12 @@ static void finalizer()
 	// flush to make sure IOSurface updates are seen globally.
 	glFlushRenderAPPLE();
 		
+	if(_useSRGBBuffer)
+	{
+		// Disable linear to sRGB correction.
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
+
 	// restore state
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _previousFBO);	
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, _previousReadFBO);
@@ -415,7 +433,7 @@ static void finalizer()
 #if !SYPHON_DEBUG_NO_DRAWING
 		// render to our FBO with an IOSurface backed texture attachment (whew!)
         NSSize surfaceSize = _surfaceTexture.textureSize;
-        [_drawingProtocol drawFrameTexture:texID textureTarget:target imageRegion:region textureDimensions:size surfaceSize:surfaceSize flipped:isFlipped inContex:cgl_ctx];
+        [_drawingProtocol drawFrameTexture:texID textureTarget:target imageRegion:region textureDimensions:size surfaceSize:surfaceSize flipped:isFlipped inContex:cgl_ctx discardAlpha:_discardAlphaChannel];
 #endif // SYPHON_DEBUG_NO_DRAWING
 		[self unbindAndPublish];
 	}
@@ -450,7 +468,7 @@ static void finalizer()
                 GLint maxSamples;
                 glGetIntegerv(GL_MAX_SAMPLES_EXT, &maxSamples);
                 
-                if (newMSAASampleCount > maxSamples) newMSAASampleCount = maxSamples;
+                if (newMSAASampleCount > (GLuint)maxSamples) newMSAASampleCount = maxSamples;
             }
         }
         if (newMSAASampleCount != _msaaSampleCount)
@@ -530,7 +548,8 @@ static void finalizer()
 	glGetIntegerv(GL_RENDERBUFFER_BINDING_EXT, &previousRBO);
     // make a new texture.
     
-	_surfaceTexture = [[SyphonIOSurfaceImage alloc] initWithSurface:_surfaceRef forContext:cgl_ctx];
+	GLenum internalFormat = _useSRGBBuffer ? GL_SRGB8_ALPHA8_EXT : GL_RGBA8;
+	_surfaceTexture = [[SyphonIOSurfaceImage alloc] initWithSurface:_surfaceRef forContext:cgl_ctx internalFormat:internalFormat];
 	if(_surfaceTexture == nil)
 	{
 		[self destroyIOSurface];
@@ -750,6 +769,7 @@ static NSMutableSet *mRetireList = nil;
 
 - (void) handleDiscoveryRequest:(NSNotification*) aNotification
 {
+	SYPHON_UNUSED(aNotification);
 	SYPHONLOG(@"Got Discovery Request");
 	
 	[self broadcastServerAnnounce];

@@ -73,6 +73,8 @@
 
 - (id)initWithUUID:(NSString *)uuid options:(NSDictionary *)options
 {
+	SYPHON_UNUSED(options);
+
     self = [super init];
     if (self)
 	{
@@ -115,6 +117,9 @@
 	// Tell connected clients
 	dispatch_async(_queue, ^{
 		[_infoClients enumerateKeysAndObjectsUsingBlock:^(id key, id client, BOOL *stop) {
+			SYPHON_UNUSED(key);
+			SYPHON_UNUSED(stop);
+
 			[(SyphonMessageSender *)client send:serverName ofType:SyphonMessageTypeUpdateServerName];
 		}];
 	});
@@ -292,6 +297,9 @@
 				[self willChangeValueForKey:@"hasClients"];
 			}
 			[_infoClients enumerateKeysAndObjectsUsingBlock:^(id key, id client, BOOL *stop) {
+					SYPHON_UNUSED(key);
+					SYPHON_UNUSED(stop);
+
 					[(SyphonMessageSender *)client send:nil ofType:SyphonMessageTypeRetireServer];
 				}];
 			
@@ -323,6 +331,9 @@
 {
 	dispatch_sync(_queue, ^{
 		[_frameClients enumerateKeysAndObjectsUsingBlock:^(id key, id client, BOOL *stop) {
+			SYPHON_UNUSED(key);
+			SYPHON_UNUSED(stop);
+
 			[(SyphonMessageSender *)client send:nil ofType:SyphonMessageTypeNewFrame];
 		}];
 	});
@@ -333,6 +344,9 @@
 	dispatch_sync(_queue, ^{
 		_surfaceID = newID;
 		[_infoClients enumerateKeysAndObjectsUsingBlock:^(id key, id client, BOOL *stop) {
+			SYPHON_UNUSED(key);
+			SYPHON_UNUSED(stop);
+
 			[(SyphonMessageSender *)client send:[NSNumber numberWithUnsignedInt:newID] ofType:SyphonMessageTypeUpdateSurfaceID];
 		}];
 	});
@@ -345,22 +359,32 @@
 	dispatch_async(_queue, ^{
 		NSMutableArray *inMemorium = [NSMutableArray arrayWithCapacity:1];
 		[_infoClients enumerateKeysAndObjectsUsingBlock:^(id key, id client, BOOL *stop) {
+			SYPHON_UNUSED(stop);
+
 			if (![client isValid])
 			{
 				[inMemorium addObject:key];
 			}
 		}];
 		[inMemorium enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			SYPHON_UNUSED(idx);
+			SYPHON_UNUSED(stop);
+
 			[self removeInfoClient:obj];
 		}];
 		[inMemorium removeAllObjects];
 		[_frameClients enumerateKeysAndObjectsUsingBlock:^(id key, id client, BOOL *stop) {
+			SYPHON_UNUSED(stop);
+
 			if (![client isValid])
 			{
 				[inMemorium addObject:key];
 			}
 		}];
 		[inMemorium enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+			SYPHON_UNUSED(idx);
+			SYPHON_UNUSED(stop);
+
 			[self removeFrameClient:obj];
 		}];
 	});

@@ -59,6 +59,18 @@ extern NSString * const SyphonServerOptionDepthBufferResolution;
  */
 extern NSString * const SyphonServerOptionStencilBufferResolution;
 
+/*!
+ @relates SyphonServer
+ If this key is matched with a NSNumber with a BOOL value YES, then the server will enable the sRGB color space option when accessing FBOs. In other words, it performs gamma correction (linear to sRGB) for frames to be published. It is recommended if the application uses linear-space lighting and the reder buffer is kept linear. Without this option, an additional gamma correction will be required on the client side and it may decrease the quality of the color respresentation. Default is NO.
+ */
+extern NSString * const SyphonServerOptionUseSRGBBuffer;
+
+/*!
+ @relates SyphonServer
+ If this key is matched with a NSNumber with a BOOL value YES, then the server will discard alpha channel of a source frame before publishing. When this option is enabled, alpha channel of an FBO will be filled with value 1. Default is NO.
+ */
+extern NSString * const SyphonServerOptionDiscardAlphaChannel;
+
 /*! @} */
 
 /*!
@@ -103,6 +115,8 @@ extern NSString * const SyphonServerOptionStencilBufferResolution;
 	GLuint _msaaSampleCount;
 	GLuint _msaaFBO;
 	GLuint _msaaColorBuffer;
+	BOOL _useSRGBBuffer;
+	BOOL _discardAlphaChannel;
 	
 	GLint _previousReadFBO;
 	GLint _previousDrawFBO;
