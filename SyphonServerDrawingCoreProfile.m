@@ -1,44 +1,40 @@
 //
 //  SyphonServerDrawingCoreProfile.m
-//  Syphon
+//  Draws frame texture in the core profile mode
 //
-//  Created by Eduardo Roman on 1/26/15.
-//
+//  Originally created by Eduardo Roman on 1/26/15.
+//  Modified by Keijiro Takahashi
 //
 
 #import "SyphonServerDrawingCoreProfile.h"
 #import <OpenGL/gl3.h>
 #import "SyphonProgram.h"
 
-
-
-
-@implementation SyphonServerDrawingCoreProfile{
-    SyphonProgram*syphonProgram;
+@implementation SyphonServerDrawingCoreProfile {
+    SyphonProgram* _syphonProgram;
 }
 
-
-- (void)drawFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size surfaceSize:(NSSize)surfaceSize flipped:(BOOL)isFlipped inContex:(CGLContextObj)cgl_ctx discardAlpha:(BOOL)discardAlpha{
-    
+- (void)drawFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size surfaceSize:(NSSize)surfaceSize flipped:(BOOL)isFlipped inContex:(CGLContextObj)cgl_ctx discardAlpha:(BOOL)discardAlpha
+{
     CGLSetCurrentContext(cgl_ctx);
     
-    if(nil==syphonProgram){
-        syphonProgram = [[SyphonProgram alloc] init];
+    if (_syphonProgram == nil)
+    {
+        _syphonProgram = [[SyphonProgram alloc] init];
+        if (_syphonProgram == nil) return;
     }
     
-    if(nil == syphonProgram){
-        return;
-    }
+    glViewport(0, 0, surfaceSize.width, surfaceSize.height);
     
+    _syphonProgram.discardAlpha = discardAlpha;
+    [_syphonProgram use];
     
     glDisable(GL_CULL_FACE);
-    glViewport(0, 0, surfaceSize.width, surfaceSize.height);
-    [syphonProgram use];
-    [syphonProgram setRegion:region size:size flipped:isFlipped];
+    
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(target, texID);    
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glUseProgram(0);
+    glBindTexture(target, texID);
+    
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 @end

@@ -1,9 +1,9 @@
 //
-//  SyphonServerDrawingCoreProfile.h
-//  Syphon
+//  SyphonServerDrawingCoreProfile.m
+//  Draws frame texture in the core profile mode
 //
-//  Created by Eduardo Roman on 1/26/15.
-//
+//  Originally created by Eduardo Roman on 1/26/15.
+//  Modified by Keijiro Takahashi
 //
 
 #import <Foundation/Foundation.h>

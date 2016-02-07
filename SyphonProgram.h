@@ -1,17 +1,18 @@
 //
-//  SyphonProgram.h
-//  Syphon
+//  SyphonProgram.m
+//  Provides a program object used in the core profile mode
 //
-//  Created by Eduardo Roman on 1/26/15.
-//
+//  Originally created by Eduardo Roman on 1/26/15.
+//  Modified by Keijiro Takahashi
 //
 
 #import <Foundation/Foundation.h>
 
 @interface SyphonProgram : NSObject
-@property(readonly) GLint program;
+
+@property (readonly) GLint program;
+@property (assign) BOOL discardAlpha;
+
 -(void)use;
--(void)setRegion:(NSRect)region size:(NSSize)size flipped:(BOOL)isFlipped;
-+(void)unUse;
 
 @end
