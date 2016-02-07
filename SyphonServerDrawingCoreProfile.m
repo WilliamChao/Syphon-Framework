@@ -12,17 +12,25 @@
 
 @implementation SyphonServerDrawingCoreProfile {
     SyphonProgram* _syphonProgram;
+    GLuint _vao;
+}
+
+- (instancetype)init
+{
+    if (self = [super init])
+    {
+        _syphonProgram = [[SyphonProgram alloc] init];
+        if (_syphonProgram == nil) self = nil;
+    }
+    return self;
 }
 
 - (void)drawFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size surfaceSize:(NSSize)surfaceSize flipped:(BOOL)isFlipped inContex:(CGLContextObj)cgl_ctx discardAlpha:(BOOL)discardAlpha
 {
     CGLSetCurrentContext(cgl_ctx);
     
-    if (_syphonProgram == nil)
-    {
-        _syphonProgram = [[SyphonProgram alloc] init];
-        if (_syphonProgram == nil) return;
-    }
+    if (_vao == 0) glGenVertexArrays(1, &_vao);
+    glBindVertexArray(_vao);
     
     glViewport(0, 0, surfaceSize.width, surfaceSize.height);
     

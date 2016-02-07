@@ -92,6 +92,7 @@ static BOOL ValidateProgram(GLint program)
 #pragma mark Class Implementation
 
 @implementation SyphonProgram {
+    BOOL _initialized;
     GLint _vertexShader;
     GLint _fragmentShader;
     GLint _program;
@@ -103,34 +104,30 @@ static BOOL ValidateProgram(GLint program)
 @synthesize program = _program;
 @synthesize discardAlpha = _discardAlpha;
 
-- (instancetype)init
+- (void)setup
 {
-    if (self = [super init])
+    _vertexShader = InitShader(GL_VERTEX_SHADER, vertexShaderString);
+    _fragmentShader = InitShader(GL_FRAGMENT_SHADER, fragmentShaderString);
+    
+    _program = glCreateProgram();
+    glAttachShader(_program, _vertexShader);
+    glAttachShader(_program, _fragmentShader);
+    glLinkProgram(_program);
+    
+    if (ValidateProgram(_program))
     {
-        _vertexShader = InitShader(GL_VERTEX_SHADER, vertexShaderString);
-        _fragmentShader = InitShader(GL_FRAGMENT_SHADER, fragmentShaderString);
-        
-        _program = glCreateProgram();
-        glAttachShader(_program, _vertexShader);
-        glAttachShader(_program, _fragmentShader);
-        glLinkProgram(_program);
-        
-        if (ValidateProgram(_program))
-        {
-            glBindFragDataLocation(_program, 0, "o_frag_color");
-            _u_color_location = glGetUniformLocation(_program, "u_color");
-            _u_alpha_location = glGetUniformLocation(_program, "u_alpha");
-        }
-        else
-        {
-            self = nil;
-        }
+        glBindFragDataLocation(_program, 0, "o_frag_color");
+        _u_color_location = glGetUniformLocation(_program, "u_color");
+        _u_alpha_location = glGetUniformLocation(_program, "u_alpha");
     }
-    return self;
+    
+    _initialized = YES;
 }
 
 - (void)use
 {
+    if (!_initialized) [self setup];
+    
     glUseProgram(_program);
     glUniform1i(_u_color_location, 0);
     glUniform1f(_u_alpha_location, _discardAlpha ? 1 : 0);
