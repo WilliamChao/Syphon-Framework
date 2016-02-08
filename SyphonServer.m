@@ -119,13 +119,7 @@ static void finalizer()
 		_mdLock = OS_SPINLOCK_INIT;
 		
 		cgl_ctx = CGLRetainContext(context);
-        GLboolean isCoreProfile = SyphonOpenGLContextIsCoreProfile(context);
-        if(isCoreProfile){
-            _drawingProtocol = [[SyphonServerDrawingCoreProfile alloc] init];
-        }
-        else{
-            _drawingProtocol = [[SyphonServerDrawingLegacy alloc] init];
-        }
+        _drawingProtocol = [[SyphonServerDrawingCoreProfile alloc] init];
         
 		if (serverName == nil)
 		{

@@ -7,47 +7,69 @@
 //
 
 #import "SyphonProgram.h"
+#import "SyphonOpenGLFunctions.h"
 #import <OpenGL/gl3.h>
 
 #pragma mark Utility macros
 
-#define SHADER_STRING(text) @"#version 150\n"#text
+#define SHADER_STRING(ver, text) @"#version "#ver"\n"#text
 
 #pragma mark
 #pragma mark Shader code
 
 // Vertex shader code
-NSString *const vertexShaderString = SHADER_STRING(
-out vec2 v_texcoord;
+NSString *const vertexShaderString120 = SHADER_STRING(120,
+    attribute vec2 position;
+    varying vec2 texcoord;
 
-void main(void)
-{
-    float i = gl_VertexID;
-    float x = mod(i, 2);
-    float y = floor(i / 2);
-    // (0,0) - (1,0) - (0,1) - (1,1)
-    v_texcoord = vec2(x, y);
-    // (-1,1) - (1,1) - (-1,-1) - (1,-1)
-    gl_Position = vec4(2 * x - 1, 1 - 2 * y, 1, 1);
-}
+    void main(void)
+    {
+        texcoord = position;
+        gl_Position = vec4(2 * position.x - 1, 1 - 2 * position.y, 1, 1);
+    }
+);
+
+NSString *const vertexShaderString150 = SHADER_STRING(150,
+    in vec2 position;
+    out vec2 texcoord;
+
+    void main(void)
+    {
+        texcoord = position;
+        gl_Position = vec4(2 * position.x - 1, 1 - 2 * position.y, 1, 1);
+    }
 );
 
 // Fragment shader code
-NSString *const fragmentShaderString = SHADER_STRING(
-uniform sampler2D u_color;
-uniform float u_alpha;
+NSString *const fragmentShaderString120 = SHADER_STRING(120,
+    uniform sampler2D color;
+    uniform float alpha;
 
-in vec2 v_texcoord;
+    varying vec2 texcoord;
 
-out vec4 o_frag_color;
+    void main(void)
+    {
+        vec2 uv = vec2(texcoord.x, 1 - texcoord.y);
+        vec4 col = texture2D(color, uv);
+        col.a = mix(col.a, 1, alpha); // discards alpha when alpha == 1
+        gl_FragColor = col;
+    }
+);
 
-void main(void)
-{
-    vec2 uv = vec2(v_texcoord.x, 1 - v_texcoord.y);
-    vec4 col = texture(u_color, uv);
-    col.a = mix(col.a, 1, u_alpha); // discards alpha when u_alpha == 1
-    o_frag_color = col;
-}
+NSString *const fragmentShaderString150 = SHADER_STRING(150,
+    uniform sampler2D color;
+    uniform float alpha;
+
+    in vec2 texcoord;
+    out vec4 frag_color;
+
+    void main(void)
+    {
+        vec2 uv = vec2(texcoord.x, 1 - texcoord.y);
+        vec4 col = texture(color, uv);
+        col.a = mix(col.a, 1, alpha); // discards alpha when alpha == 1
+        frag_color = col;
+    }
 );
 
 // Initialize a shader with a given source.
@@ -97,8 +119,8 @@ static BOOL ValidateProgram(GLint program)
     GLint _fragmentShader;
     GLint _program;
     BOOL _discardAlpha;
-    GLuint _u_color_location;
-    GLuint _u_alpha_location;
+    GLuint _colorLocation;
+    GLuint _alphaLocation;
 }
 
 @synthesize program = _program;
@@ -106,8 +128,10 @@ static BOOL ValidateProgram(GLint program)
 
 - (void)setup
 {
-    _vertexShader = InitShader(GL_VERTEX_SHADER, vertexShaderString);
-    _fragmentShader = InitShader(GL_FRAGMENT_SHADER, fragmentShaderString);
+    BOOL isCore = SyphonOpenGLContextIsCoreProfile(CGLGetCurrentContext());
+    
+    _vertexShader = InitShader(GL_VERTEX_SHADER, isCore ? vertexShaderString150 : vertexShaderString120);
+    _fragmentShader = InitShader(GL_FRAGMENT_SHADER, isCore ? fragmentShaderString150 : fragmentShaderString120);
     
     _program = glCreateProgram();
     glAttachShader(_program, _vertexShader);
@@ -116,9 +140,9 @@ static BOOL ValidateProgram(GLint program)
     
     if (ValidateProgram(_program))
     {
-        glBindFragDataLocation(_program, 0, "o_frag_color");
-        _u_color_location = glGetUniformLocation(_program, "u_color");
-        _u_alpha_location = glGetUniformLocation(_program, "u_alpha");
+        if (isCore) glBindFragDataLocation(_program, 0, "o_frag_color");
+        _colorLocation = glGetUniformLocation(_program, "color");
+        _alphaLocation = glGetUniformLocation(_program, "alpha");
     }
     
     _initialized = YES;
@@ -129,8 +153,8 @@ static BOOL ValidateProgram(GLint program)
     if (!_initialized) [self setup];
     
     glUseProgram(_program);
-    glUniform1i(_u_color_location, 0);
-    glUniform1f(_u_alpha_location, _discardAlpha ? 1 : 0);
+    glUniform1i(_colorLocation, 0);
+    glUniform1f(_alphaLocation, _discardAlpha ? 1 : 0);
 }
 
 @end
