@@ -6,12 +6,12 @@
 //  Modified by Keijiro Takahashi
 //
 
-#import "SyphonServerDrawingCoreProfile.h"
+#import "SyphonServerDrawingHelper.h"
 #import "SyphonOpenGLFunctions.h"
 #import "SyphonProgram.h"
 #import <OpenGL/gl3.h>
 
-@implementation SyphonServerDrawingCoreProfile
+@implementation SyphonServerDrawingHelper
 {
     SyphonProgram* _syphonProgram;
     BOOL _initialized;
@@ -54,7 +54,7 @@
     _initialized = YES;
 }
 
-- (void)drawFrameTexture:(GLuint)texID textureTarget:(GLenum)target imageRegion:(NSRect)region textureDimensions:(NSSize)size surfaceSize:(NSSize)surfaceSize flipped:(BOOL)isFlipped inContex:(CGLContextObj)context discardAlpha:(BOOL)discardAlpha
+- (void)drawFrameTexture:(GLuint)texID surfaceSize:(NSSize)surfaceSize inContex:(CGLContextObj)context discardAlpha:(BOOL)discardAlpha
 {
     // Initialize with the GL context if not yet.
     if (!_initialized) [self setupWithContext:context];
@@ -84,7 +84,7 @@
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(target, texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
     
     // Draw the quad.
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

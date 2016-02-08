@@ -39,8 +39,7 @@
 
 #import <libkern/OSAtomic.h>
 
-#import "SyphonServerDrawingLegacy.h"
-#import "SyphonServerDrawingCoreProfile.h"
+#import "SyphonServerDrawingHelper.h"
 
 
 
@@ -71,7 +70,7 @@ static void finalizer()
 }
 
 @implementation SyphonServer{
-    id<SyphonServerDrawingProtocol> _drawingProtocol; //helper
+    SyphonServerDrawingHelper* _drawingHelper;
 }
 
 + (BOOL)automaticallyNotifiesObserversForKey:(NSString *)theKey
@@ -119,7 +118,7 @@ static void finalizer()
 		_mdLock = OS_SPINLOCK_INIT;
 		
 		cgl_ctx = CGLRetainContext(context);
-        _drawingProtocol = [[SyphonServerDrawingCoreProfile alloc] init];
+        _drawingHelper = [[SyphonServerDrawingHelper alloc] init];
         
 		if (serverName == nil)
 		{
@@ -427,7 +426,7 @@ static void finalizer()
 #if !SYPHON_DEBUG_NO_DRAWING
 		// render to our FBO with an IOSurface backed texture attachment (whew!)
         NSSize surfaceSize = _surfaceTexture.textureSize;
-        [_drawingProtocol drawFrameTexture:texID textureTarget:target imageRegion:region textureDimensions:size surfaceSize:surfaceSize flipped:isFlipped inContex:cgl_ctx discardAlpha:_discardAlphaChannel];
+        [_drawingHelper drawFrameTexture:texID surfaceSize:surfaceSize inContex:cgl_ctx discardAlpha:_discardAlphaChannel];
 #endif // SYPHON_DEBUG_NO_DRAWING
 		[self unbindAndPublish];
 	}
